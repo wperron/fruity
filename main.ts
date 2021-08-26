@@ -1,11 +1,14 @@
-const listener = Deno.listen({ port: 8000 });
-for await (const conn of listener) {
-  (async () => {
-    const requests = Deno.serveHttp(conn);
-    for await (const req of requests) {
-      const start = performance.now();
-      req.respondWith(new Response("Hello world", { headers: { "server": "fruity" } }));
-      console.log(`${new Date().toISOString()} GET 200 OK ${new URL(req.request.url).pathname} ${(performance.now() - start).toFixed(0)}ms`)
-    }
-  })();
-}
+import { Application } from "https://deno.land/x/oak@v9.0.0/mod.ts";
+
+const app = new Application();
+
+const fruits = ["banana", "strawberry", "camerise", "apple", "orange"]
+
+// deno-lint-ignore no-explicit-any
+app.use((ctx: any) => {
+  const start = performance.now();
+  ctx.response.body = fruits[Math.floor(Math.random()*fruits.length)];
+  console.log(`${new Date().toISOString()} GET 200 OK ${new URL(ctx.request.url).pathname} ${(performance.now() - start).toFixed(0)}ms`);
+});
+
+await app.listen({ port: 8000 });
