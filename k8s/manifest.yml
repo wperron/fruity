@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fruity
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fruity
+  namespace: fruity
+spec:
+  type: LoadBalancer
+  selector:
+    app: fruity
+  ports:
+  - port: 80
+    targetPort: 8000
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: fruity
+  namespace: fruity
+  labels:
+    app: fruity
+spec:
+  serviceName: fruity
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fruity
+  template:
+    metadata:
+      labels:
+        app: fruity
+    spec:
+      securityContext:
+        fsGroup: 1993
+      containers:
+      - name: fruity
+        image: wperron/fruity:0.1.0
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            cpu: "40m"
+            memory: "128Mi"
+        volumeMounts:
+          - mountPath: /deno-dir
+            name: denodir
+  volumeClaimTemplates:
+    - metadata:
+        name: denodir
+      spec:
+        accessModes:
+          - ReadWrite
+        storageClassName: do-block-storage
+        resources:
+          requests:
+            storage: 1Gi
